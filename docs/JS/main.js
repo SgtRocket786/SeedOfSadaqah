@@ -1,11 +1,20 @@
+/* ===============================
+   Shared partials + nav wiring
+================================= */
+
 async function includePart(el, url) {
   const res = await fetch(url);
   el.innerHTML = await res.text();
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", init);
+
+async function init() {
+  // depth=0 for docs/*.html, depth=1 for docs/projects/*.html
   const depth = document.body.getAttribute("data-depth") || "0";
   const prefix = depth === "1" ? "../" : "";
+
+  // Inject header/footer partials
   const headerHost = document.getElementById("site-header");
   const footerHost = document.getElementById("site-footer");
   if (headerHost)
@@ -13,68 +22,104 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (footerHost)
     await includePart(footerHost, prefix + "partials/footer.html");
 
-  // fix header links now that header is injected
+  // After injection: rewrite nav links and logo to be depth-safe
   const navRoot = document.getElementById("navLinks");
   if (navRoot) {
     navRoot.querySelectorAll("a[data-href]").forEach((a) => {
       a.href = prefix + a.getAttribute("data-href");
     });
-    const brand = document.querySelector(".brand");
-    if (brand) brand.href = prefix + "index.html";
   }
+  const brand = document.querySelector("a.brand");
+  if (brand) brand.href = prefix + "index.html";
+  document.querySelectorAll("img.brand-logo-img").forEach((img) => {
+    img.src = prefix + "Assets/img/logo.jpg";
+  });
 
   // Footer year
-  setTimeout(() => {
-    const yearEl = document.getElementById("year");
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
-  }, 200);
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // After load, wire up events
-  setTimeout(() => {
-    const links = document.querySelectorAll(".nav-links a");
-    links.forEach((a) => {
-      const current = location.pathname.split("/").pop();
-      const target = a.getAttribute("href").split("/").pop();
-      if (current === target) a.classList.add("active");
+  // Active link highlight
+  const current = (
+    location.pathname.split("/").pop() || "index.html"
+  ).toLowerCase();
+  document.querySelectorAll(".nav-links a[href]").forEach((a) => {
+    const target = (a.getAttribute("href") || "")
+      .split("/")
+      .pop()
+      ?.toLowerCase();
+    if (target === current) a.classList.add("active");
+  });
+
+  // Mobile hamburger
+  const hamburger = document.getElementById("hamburger");
+  const navLinks = document.getElementById("navLinks");
+  if (hamburger && navLinks) {
+    hamburger.addEventListener("click", () => {
+      const open = hamburger.getAttribute("aria-expanded") === "true";
+      hamburger.setAttribute("aria-expanded", String(!open));
+      if (!open) {
+        navLinks.style.display = "flex";
+        navLinks.style.flexDirection = "column";
+        navLinks.style.position = "absolute";
+        navLinks.style.right = "1rem";
+        navLinks.style.top = "60px";
+        navLinks.style.background = "white";
+        navLinks.style.padding = "0.6rem";
+        navLinks.style.border = "1px solid rgba(0,0,0,.08)";
+        navLinks.style.borderRadius = "12px";
+        navLinks.style.boxShadow = "0 10px 30px rgba(0,0,0,.08)";
+      } else {
+        navLinks.style.display = "";
+        navLinks.removeAttribute("style");
+        navLinks.className = "nav-links";
+      }
     });
-    const hamburger = document.getElementById("hamburger");
-    const navLinks = document.getElementById("navLinks");
-    if (hamburger && navLinks) {
-      hamburger.addEventListener("click", () => {
-        const open = hamburger.getAttribute("aria-expanded") === "true";
-        hamburger.setAttribute("aria-expanded", String(!open));
-        if (!open) {
-          navLinks.style.display = "flex";
-          navLinks.style.flexDirection = "column";
-          navLinks.style.position = "absolute";
-          navLinks.style.right = "1rem";
-          navLinks.style.top = "60px";
-          navLinks.style.background = "white";
-          navLinks.style.padding = "0.6rem";
-          navLinks.style.border = "1px solid rgba(0,0,0,.08)";
-          navLinks.style.borderRadius = "12px";
-          navLinks.style.boxShadow = "0 10px 30px rgba(0,0,0,.08)";
-        } else {
-          navLinks.style.display = "";
-          navLinks.removeAttribute("style");
-          navLinks.className = "nav-links";
-        }
-      });
-    }
-  }, 300);
-});
+  }
 
-// ===== HERO SLIDER (clean) =====
-// ===== HERO SLIDER (stacked layout) =====
-(function () {
+  // Init slider & contact forms
+  initHeroSlider();
+  wireContactForms();
+}
+
+/* ===============================
+   HERO SLIDER (stacked layout)
+   - arrows, dots, autoplay, pause on hover/focus
+   - swipe & keyboard support
+================================= */
+
+function initHeroSlider() {
   const root = document.querySelector(".slider");
   if (!root) return;
 
   const track = root.querySelector("#slides");
+  if (!track) return;
+
   const slides = Array.from(track.children);
-  const dots = Array.from(root.querySelectorAll(".dot"));
+  if (!slides.length) return;
+
+  // Buttons
   const prev = root.querySelector(".slider-btn.prev");
   const next = root.querySelector(".slider-btn.next");
+
+  // Dots (auto-create if missing / count mismatch)
+  let dotsWrap = root.querySelector(".slider-dots");
+  if (!dotsWrap) {
+    dotsWrap = document.createElement("div");
+    dotsWrap.className = "slider-dots";
+    root.appendChild(dotsWrap);
+  }
+  if (!dotsWrap.children.length || dotsWrap.children.length !== slides.length) {
+    dotsWrap.innerHTML = ""; // reset
+    slides.forEach((_, i) => {
+      const b = document.createElement("button");
+      b.className = "dot";
+      b.setAttribute("aria-label", `Go to slide ${i + 1}`);
+      if (i === 0) b.setAttribute("aria-current", "true");
+      dotsWrap.appendChild(b);
+    });
+  }
+  const dots = Array.from(dotsWrap.querySelectorAll(".dot"));
 
   let index = 0;
   let timer = null;
@@ -87,11 +132,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       d.setAttribute("aria-current", idx === index ? "true" : "false")
     );
   }
+
   function autoplay() {
     clearInterval(timer);
     timer = setInterval(() => go(index + 1), AUTOPLAY_MS);
   }
 
+  // Controls
   prev?.addEventListener("click", () => {
     go(index - 1);
     autoplay();
@@ -107,11 +154,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     })
   );
 
-  // Pause on hover/focus; resume on leave
+  // Pause on hover/focus
   root.addEventListener("mouseenter", () => clearInterval(timer));
   root.addEventListener("mouseleave", autoplay);
   root.addEventListener("focusin", () => clearInterval(timer));
   root.addEventListener("focusout", autoplay);
+
+  // Pause when tab hidden (saves CPU, avoids jumps)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearInterval(timer);
+    else autoplay();
+  });
 
   // Swipe support
   let startX = null;
@@ -127,14 +180,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     autoplay();
   });
 
+  // Keyboard (left/right)
+  root.setAttribute("tabindex", "0"); // focusable slider
+  root.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") {
+      go(index - 1);
+      autoplay();
+    } else if (e.key === "ArrowRight") {
+      go(index + 1);
+      autoplay();
+    }
+  });
+
+  // Init
   go(0);
   autoplay();
-})();
+}
 
-// ===== END HERO SLIDER =====
+/* ===============================
+   Contact forms: validate required
+   + success pill message
+================================= */
 
-// ===== Contact form validation & success state =====
-(function () {
+function wireContactForms() {
   function wire(formId, msgId) {
     const form = document.getElementById(formId);
     const msg = document.getElementById(msgId);
@@ -157,20 +225,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
 
+      // Basic HTML5 email validity (if present)
+      const email = form.querySelector('input[type="email"]');
+      if (email && !email.checkValidity()) {
+        valid = false;
+        email.classList.add("error");
+      }
+
       if (!valid) {
         msg.textContent = "Please fill out all fields before submitting.";
         msg.className = "note error";
         return;
       }
 
-      // If valid
+      // Simulated success
       msg.textContent = "Message sent! We’ll get back to you shortly.";
       msg.className = "note success";
       setTimeout(() => (msg.textContent = ""), 4000);
       form.reset();
     });
   }
+
+  // Home & dedicated Contact page
   wire("contactFormHome", "contactMsgHome");
   wire("contactForm", "contactMsg");
-})();
-// ===== END Contact form validation & success state =====
+}

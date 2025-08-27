@@ -10,7 +10,7 @@ async function includePart(el, url) {
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
-  // depth=0 for docs/*.html, depth=1 for docs/projects/*.html
+  // depth=0 for *.html, depth=1 for projects/*.html
   const depth = document.body.getAttribute("data-depth") || "0";
   const prefix = depth === "1" ? "../" : "";
 

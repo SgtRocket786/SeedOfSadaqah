@@ -13,6 +13,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (footerHost)
     await includePart(footerHost, prefix + "partials/footer.html");
 
+  // fix header links now that header is injected
+  const navRoot = document.getElementById("navLinks");
+  if (navRoot) {
+    navRoot.querySelectorAll("a[data-href]").forEach((a) => {
+      a.href = prefix + a.getAttribute("data-href");
+    });
+    const brand = document.querySelector(".brand");
+    if (brand) brand.href = prefix + "index.html";
+  }
+
   // Footer year
   setTimeout(() => {
     const yearEl = document.getElementById("year");

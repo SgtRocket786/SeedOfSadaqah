@@ -5,19 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Seed of Sadaqah – Contact</title>
     <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="icon" type="image/x-icon" href="Assets/img/logo.png" />
+    <meta
+      name="description"
+      content="Contact Seed of Sadaqah about Sadaqah/Zakat donations, appeals, and partnerships."
+    />
+    <meta name="theme-color" content="#384819" />
+    <meta property="og:title" content="Seed of Sadaqah – Contact" />
+    <meta
+      property="og:description"
+      content="Get in touch with our team about projects, partnerships, and donations."
+    />
+    <meta property="og:image" content="Assets/img/logo.jpg" />
   </head>
   <body data-depth="0">
     <div id="site-header"></div>
-    <main>
+    <main id="main">
       <section class="team" id="contact">
         <div class="container">
           <h1>Contact Us</h1>
           <div class="panel mt-2">
-            <form class="enhanced" id="contactFormHome" novalidate>
+            <p class="note">
+              Prefer email?
+              <a href="mailto:seedofsadaqah@gmail.com"
+                >seedofsadaqah@gmail.com</a
+              >
+            </p>
+            <form class="enhanced" id="contactForm" novalidate>
               <div>
-                <label for="nameHome">Full name</label>
+                <label for="name">Full name</label>
                 <input
-                  id="nameHome"
+                  id="name"
                   name="name"
                   type="text"
                   placeholder="Jane Doe"
@@ -25,9 +43,9 @@
                 />
               </div>
               <div>
-                <label for="emailHome">Email</label>
+                <label for="email">Email</label>
                 <input
-                  id="emailHome"
+                  id="email"
                   name="email"
                   type="email"
                   placeholder="jane@email.com"
@@ -35,9 +53,9 @@
                 />
               </div>
               <div>
-                <label for="msgHome">Message</label>
+                <label for="msg">Message</label>
                 <textarea
-                  id="msgHome"
+                  id="msg"
                   name="msg"
                   placeholder="How can we help?"
                   required
@@ -45,11 +63,7 @@
               </div>
               <div class="form-actions">
                 <button class="btn primary" type="submit">Send</button>
-                <span
-                  id="contactMsgHome"
-                  class="note"
-                  aria-live="polite"
-                ></span>
+                <span id="contactMsg" class="note" aria-live="polite"></span>
               </div>
             </form>
           </div>

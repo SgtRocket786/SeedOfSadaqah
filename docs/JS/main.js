@@ -80,6 +80,8 @@ async function init() {
   // Init slider & contact forms
   initHeroSlider();
   wireContactForms();
+  wireCopyButtons();
+  enhanceNavDismiss();
 }
 
 /* ===============================
@@ -249,4 +251,58 @@ function wireContactForms() {
   // Home & dedicated Contact page
   wire("contactFormHome", "contactMsgHome");
   wire("contactForm", "contactMsg");
+}
+
+/* ===============================
+   Copy-to-clipboard for payment handles
+================================= */
+function wireCopyButtons() {
+  const btns = document.querySelectorAll("button.copy[data-copy]");
+  if (!btns.length) return;
+  btns.forEach((b) => {
+    b.addEventListener("click", async () => {
+      const val = b.getAttribute("data-copy");
+      try {
+        await navigator.clipboard.writeText(val);
+        const note = b.nextElementSibling;
+        if (note) {
+          note.textContent = "Copied!";
+          setTimeout(() => (note.textContent = ""), 1500);
+        }
+      } catch {
+        const note = b.nextElementSibling;
+        if (note) note.textContent = "Press Ctrl+C to copy";
+      }
+    });
+  });
+}
+
+/* ===============================
+   Nav: close on outside click / Esc
+================================= */
+function enhanceNavDismiss() {
+  const hamburger = document.getElementById("hamburger");
+  const navLinks = document.getElementById("navLinks");
+  if (!hamburger || !navLinks) return;
+
+  document.addEventListener("click", (e) => {
+    const open = hamburger.getAttribute("aria-expanded") === "true";
+    if (!open) return;
+    const within = navLinks.contains(e.target) || hamburger.contains(e.target);
+    if (!within) {
+      hamburger.setAttribute("aria-expanded", "false");
+      navLinks.style.display = "";
+      navLinks.removeAttribute("style");
+      navLinks.className = "nav-links";
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      hamburger.setAttribute("aria-expanded", "false");
+      navLinks.style.display = "";
+      navLinks.removeAttribute("style");
+      navLinks.className = "nav-links";
+    }
+  });
 }

@@ -253,10 +253,11 @@ header {
   margin: 0.5rem 0 1rem;
 }
 .chip {
-  border: 2px solid var(--forest-800);
-  color: var(--forest-800);
-  background: transparent;
-  padding: 0.55rem 0.9rem;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  display: block;
+  border-radius: 14px;
   border-radius: 999px;
   font-weight: 700;
   cursor: pointer;
